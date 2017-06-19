@@ -40,7 +40,6 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log \
 	&& ln -sf /dev/stderr /var/log/nginx/error.log
 
 ENV CT_URL https://releases.hashicorp.com/consul-template/${CONSUL_TEMPLATE_VERSION}/consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip
-#ENV CT_URL https://releases.hashicorp.com/consul-template/0.18.5/consul-template_0.18.5_linux_amd64.zip
 RUN curl -o consul-template.zip $CT_URL
 RUN unzip consul-template.zip
 RUN chmod a+x consul-template
@@ -54,8 +53,6 @@ ADD nginx.conf /etc/consul-templates/nginx.conf
 
 CMD ["/usr/bin/runsvdir", "/etc/service"]
 
-EXPOSE 80
+EXPOSE 80 443
 
 STOPSIGNAL SIGTERM
-
-#CMD ["nginx", "-g", "daemon off;"]
