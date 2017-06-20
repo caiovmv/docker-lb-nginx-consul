@@ -1,14 +1,14 @@
 FROM debian:stretch-slim
 
-MAINTAINER "Caio Villela <villela.caio@gmail.com"
+MAINTAINER "Caio Villela <caiovmv@hotmail.com>"
 
 ENV NGINX_VERSION 1.13.1-1~stretch
 ENV NJS_VERSION   1.13.1.0.1.10-1~stretch
 
-ENV CONSUL_TEMPLATE_VERSION="0.18.4"
+ENV CONSUL_TEMPLATE_VERSION="0.18.5"
 
 RUN apt-get update \
-	&& apt-get install --no-install-recommends --no-install-suggests -y gnupg1 vim bash telnet wget net-tools sysstat curl ca-certificates gnupg1 unzip ntp\
+	&& apt-get install --no-install-recommends --no-install-suggests -y gnupg1 vim bash telnet wget net-tools sysstat curl ca-certificates gnupg1 unzip ntp runit procps inetutils-ping dnsutils\
         && apt-get upgrade -y \
         && \
 	NGINX_GPGKEY=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62; \
@@ -45,11 +45,18 @@ RUN unzip consul-template.zip
 RUN chmod a+x consul-template
 RUN mv consul-template /usr/bin/consul-template
 
+RUN mkdir -p /etc/service/nginx
 ADD nginx.service /etc/service/nginx/run
+RUN chmod a+x /etc/service/nginx/run
+
+RUN mkdir -p /etc/service/consul-template
 ADD consul-template.service /etc/service/consul-template/run
+RUN chmod a+x /etc/service/consul-template/run
 
 RUN rm -v /etc/nginx/conf.d/*
-ADD nginx.conf /etc/consul-templates/nginx.conf
+RUN hostname -a
+COPY nginx.conf /etc/nginx/
+ADD app.conf /etc/consul-templates/app.conf
 
 CMD ["/usr/bin/runsvdir", "/etc/service"]
 

@@ -9,7 +9,14 @@ services:
     container_name: consul
     hostname: consul
     ports:
-      - "8500:8500"
+      - "8080:8500"
+      - "8300:8300"
+      - "8301:8301"
+      - "8301:8301/udp"
+      - "8302:8302"
+      - "8302:8302/udp"
+      - "8400:8400"
+      - "8600:8600"
       - "8600:53/udp"
     expose:
       - "8500"
@@ -42,26 +49,49 @@ services:
       connector:
        aliases:
         - registrator
+    links:
+      - consul
+    depends_on:
+      - consul
     volumes:
      - /var/run/docker.sock:/tmp/docker.sock
-    command: "-ip ${MYHOST} consul://${MYHOST}:8500"
+    command: "-ip ${MYHOST} consul://${MYHOST}:8080"
 
   app:
     image: tutum/hello-world:latest
     environment:
       SERVICE_NAME: app
       SERVICE_TAGS: production
-      SERVICE_80_NAME: http
-      SERVICE_80_CHECK_HTTP: .
-      SERVICE_80_CHECK_INTERVAL: 15s
+      SERVICE_CHECK_HTTP: .
+      SERVICE_CHECK_INTERVAL: 15s
+    networks:
+      connector:
+       aliases:
+        - app
     ports:
       - "80"
+    expose:
+      - "80"
 
-  lb:
+  proxy:
     build: ./
+    networks:
+      connector:
+       aliases:
+        - proxy 
     links:
      - consul
+    depends_on:
+     - registrator
     ports:
      - "80:80"
-
-
+     #- "443:443"
+    expose:
+     - "80"
+     #- "443"
+    environment:
+      SERVICE_NAME: proxy 
+      SERVICE_TAGS: production
+      DNS: consul
+    volumes:
+     - /data/nginx/cache:/data/nginx/cache
